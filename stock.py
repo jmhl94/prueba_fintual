@@ -1,4 +1,4 @@
 '''
 Algoritmo para generar datos aleatórios de Stock
 '''
-import numpy as np
+import pandas as pd
