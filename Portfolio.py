@@ -5,20 +5,23 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 from datetime import timedelta
+
+'Variables de control'
 stock_market = {}
 
 class Portfolio:
-    stock_data = {}
     def __init__(self, path_data):
-        pass
+        self.stock_data = {}
+        
     def Profit(self, init_date, final_date):
         pass
 
-    def Price(self):
-        pass
-
-    def AddStock(self):
-        pass
+    def AddStock(self, symbol, name, purchase_date, purchase_value, units):
+        stock_data[symbol] = {'name': name, 'purchase_date': purchase_date,
+                              'purchase_value': purchase_value, 'units':units
+                              }
+    def Assets(self):
+        return list(stock_data.keys())
 
 class Stock:
     def __init__(self, stock_name, purchased_price, purchased_date, units ):
@@ -30,7 +33,7 @@ class Stock:
     def Price(self, date_str):
         return stock_market[self.stock_name][date_str]
     
-def create_market(path, stocks_number, start_date, end_date, stock_market):
+def create_market(path, start_date, end_date, stock_market, stocks_number = 10):
     stoks_names = pd.read_csv(path)
     used_stocks = []
     total_stocks = len(stoks_names)
@@ -41,7 +44,7 @@ def create_market(path, stocks_number, start_date, end_date, stock_market):
         current_stock = stoks_names.iloc[index, :]
         stock_market[current_stock['Symbol']] = {
                 'name':current_stock['Name'],
-                'Pricing history':date_and_stock_range(start_date,
+                'pricing_history':date_and_stock_range(start_date,
                                                        end_date,
                                                        step = 1,) }
         used_stocks.append(index)
@@ -56,3 +59,21 @@ def date_and_stock_range(start, end, step=7, date_format="%d-%m-%Y"):
         date_i = start + timedelta(days=d)
         date_stock[date_i.strftime(date_format)] = (np.random.rand() * 300 ) + 1
     return date_stock
+
+def fill_portfolio(Portfolio, stock_market, asset_numbers):
+    'Generador aleatorio de activos en portafolio'
+    available_stock = list(stock_market.keys())
+    used_stocks = []
+    
+    while(len(Portfolio.Assets()) < asset_numbers):
+        current_stock_symbol = np.random.choice(available_stock)
+        if current_stock_symbol in used_stocks:
+            continue
+        current_stock_information = stock_market[current_stock_symbol]
+        purchase_date = np.random.choice(list(current_stock_information['pricing_history'].keys()))
+        purchase_value = current_stock_information['pricing_history'][purchase_date]
+        'Solo se pueden adquirir hasta 10 acciones usando el generador automático'
+        units  = (np.random.rand() * 10) + 1
+        Portfolio.AddStock(current_stock_symbol, current_stock_information['name'], 
+                           purchase_date, purchase_value, units)
+        used_stocks.append(current_stock_symbol)
