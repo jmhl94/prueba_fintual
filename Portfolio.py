@@ -1,37 +1,58 @@
 '''
-Algoritmo para generar datos aleatÃ³rios de Stock
+Algoritmo para generar datos aleatorios de Stock
 '''
 import pandas as pd
 import numpy as np
 from datetime import datetime
 from datetime import timedelta
+import ipdb
 
 'Variables de control'
 stock_market = {}
 
 class Portfolio:
-    def __init__(self, path_data):
+    def __init__(self):
         self.stock_data = {}
         
-    def Profit(self, init_date, final_date):
-        pass
-
+    def Profit(self, init_date_str, final_date_str):
+        init_date = datetime.strptime(init_date_str, '%d-%m-%Y')
+        final_date = datetime.strptime(final_date_str, '%d-%m-%Y')
+        init_value = 0
+        final_value = 0
+        for stock in self.stock_data:
+            purchased_date = datetime.strptime(self.stock_data[stock].purchased_date, '%d-%m-%Y')
+            if purchased_date > final_date:
+                continue
+            elif purchased_date < init_date:
+                #profit_stock = stock.ProfitValue(init_date_str, final_date_str)
+                init_value += self.stock_data[stock].Price(init_date_str) * self.stock_data[stock].units
+                final_value += self.stock_data[stock].Price(final_date_str) * self.stock_data[stock].units
+            else:
+                init_value += self.stock_data[stock].purchased_price * self.stock_data[stock].units
+                final_value += self.stock_data[stock].Price(final_date_str) * self.stock_data[stock].units
+        return  (final_value - init_value) / final_value
+            
     def AddStock(self, symbol, name, purchase_date, purchase_value, units):
-        stock_data[symbol] = {'name': name, 'purchase_date': purchase_date,
-                              'purchase_value': purchase_value, 'units':units
-                              }
+        self.stock_data[symbol] = Stock(name, symbol, purchase_date, purchase_value, units)
+        
     def Assets(self):
-        return list(stock_data.keys())
+        return list(self.stock_data.keys())
 
 class Stock:
-    def __init__(self, stock_name, purchased_price, purchased_date, units ):
+    def __init__(self, stock_name, symbol, purchased_date, purchased_price, units ):
         self.stock_name = stock_name
+        self.symbol = symbol
         self.purchased_price = purchased_price
         self.purchased_date = purchased_date
         self.units = units
 
     def Price(self, date_str):
-        return stock_market[self.stock_name][date_str]
+        return stock_market[self.symbol]['pricing_history'][date_str]
+    '''
+    def ProfitValue(self, init_date_str, final_date_str):
+        init_values = self.Price(init_date_str)
+        final_value = self.Price(final_date_str)
+        return (final_value - init_values) / init_values'''
     
 def create_market(path, start_date, end_date, stock_market, stocks_number = 10):
     stoks_names = pd.read_csv(path)
@@ -72,8 +93,13 @@ def fill_portfolio(Portfolio, stock_market, asset_numbers):
         current_stock_information = stock_market[current_stock_symbol]
         purchase_date = np.random.choice(list(current_stock_information['pricing_history'].keys()))
         purchase_value = current_stock_information['pricing_history'][purchase_date]
-        'Solo se pueden adquirir hasta 10 acciones usando el generador automático'
         units  = (np.random.rand() * 10) + 1
         Portfolio.AddStock(current_stock_symbol, current_stock_information['name'], 
                            purchase_date, purchase_value, units)
         used_stocks.append(current_stock_symbol)
+        
+'Prueba '
+path = 'constituents_csv.csv'
+create_market(path, '01-01-2020', '01-01-2021', stock_market, stocks_number = 100)
+cartera = Portfolio()
+fill_portfolio(cartera, stock_market, 10)
