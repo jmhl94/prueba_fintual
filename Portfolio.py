@@ -25,7 +25,26 @@ class Portfolio:
     '''
     def __init__(self):
         self.stock_data = {}
+
     def Profit(self, init_date_str, final_date_str):
+        init_date = datetime.strptime(init_date_str, '%d-%m-%Y')
+        final_date = datetime.strptime(final_date_str, '%d-%m-%Y')
+        delta_years = final_date.year - init_date.year
+        annualized_profit = {}
+        if delta_years == 0:
+            annualized_profit[str(init_date.year)] = self.AnualProfit(init_date_str, final_date_str)
+        else:
+            for year in range(delta_years + 1):
+                current_year = str(init_date.year + year)
+                if year == 0:
+                    annualized_profit[current_year] = self.AnualProfit(init_date_str, '31-12-' + current_year)
+                elif year == delta_years:
+                    annualized_profit[current_year] = self.AnualProfit('01-01-' + current_year, final_date_str)
+                else:
+                    annualized_profit[current_year] = self.AnualProfit('01-01-' + current_year, '31-12-' + current_year)
+        return annualized_profit
+
+    def AnualProfit(self, init_date_str, final_date_str):
         init_date = datetime.strptime(init_date_str, '%d-%m-%Y')
         final_date = datetime.strptime(final_date_str, '%d-%m-%Y')
         init_value = 0
@@ -42,7 +61,14 @@ class Portfolio:
             else:
                 init_value += self.stock_data[stock].purchased_price * self.stock_data[stock].units
                 final_value += self.stock_data[stock].Price(final_date_str) * self.stock_data[stock].units
-        return  (final_value - init_value) / final_value
+
+        if init_value == 0 or final_value == 0:
+            return {'Profit':None, 'Initial value':None, 'Final value':None}
+        else:
+            return  {'Profit':round((final_value - init_value) / final_value, 2),
+                     'Initial value':round(init_value, 2),
+                     'Final value':round(final_value, 2)}
+
     def AddStock(self, symbol, name, purchase_date, purchase_value, units):
         self.stock_data[symbol] = Stock(name, symbol, purchase_date, purchase_value, units)
 
@@ -135,6 +161,6 @@ def fill_portfolio(Portfolio, stock_market, asset_numbers):
 
 '''Prueba de los algoritmos'''
 path = 'constituents_csv.csv'
-create_market(path, '01-01-2020', '01-01-2021', stock_market, market_share = 100)
+create_market(path, '01-01-2010', '01-01-2021', stock_market, market_share = 100)
 cartera = Portfolio()
-fill_portfolio(cartera, stock_market, 10)
+fill_portfolio(cartera, stock_market, 20)
